@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Файловый менеджер</title>
+    <style>
+        body { font-family: monospace; margin: 50px; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; }
+        input { width: 100%; padding: 8px; margin: 5px 0 15px 0; box-sizing: border-box; }
+        button { width: 100%; padding: 8px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        .error { color: red; margin-top: 10px; }
+        .switch { text-align: center; margin-top: 20px; }
+        a { cursor: pointer; color: blue; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Файловый менеджер</h2>
+
+    <div id="loginDiv">
+        <h3>Вход</h3>
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Пароль">
+        <button onclick="doLogin()">Войти</button>
+        <div class="switch"><a onclick="showRegister()">Регистрация</a></div>
+    </div>
+
+    <div id="registerDiv" style="display:none;">
+        <h3>Регистрация</h3>
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPassword" placeholder="Пароль">
+        <button onclick="doRegister()">Зарегистрироваться</button>
+        <div class="switch"><a onclick="showLogin()">Назад</a></div>
+    </div>
+
+    <div id="errorMsg" class="error"></div>
+</div>
+
+<script>
+    const ctx = '/servlet';
+
+    function showRegister() {
+        document.getElementById('loginDiv').style.display = 'none';
+        document.getElementById('registerDiv').style.display = 'block';
+        errorMsg.innerHTML = '';
+    }
+
+    function showLogin() {
+        document.getElementById('loginDiv').style.display = 'block';
+        document.getElementById('registerDiv').style.display = 'none';
+        errorMsg.innerHTML = '';
+    }
+
+    function doLogin() {
+        var email = document.getElementById('loginEmail').value;
+        var pass = document.getElementById('loginPassword').value;
+
+        fetch(ctx + '/api/auth', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=login&email=' + encodeURIComponent(email) + '&pass=' + encodeURIComponent(pass)
+        }).then(function(r) {
+            if (r.status === 200) window.location.href = ctx + '/files';
+            else if (r.status === 401) errorMsg.innerHTML = 'Неверный email или пароль';
+            else errorMsg.innerHTML = 'Ошибка входа';
+        });
+    }
+
+    function doRegister() {
+        var email = document.getElementById('regEmail').value;
+        var pass = document.getElementById('regPassword').value;
+
+        fetch(ctx + '/api/auth', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=register&email=' + encodeURIComponent(email) + '&pass=' + encodeURIComponent(pass)
+        }).then(function(r) {
+            if (r.status === 200) window.location.href = ctx + '/files';
+            else if (r.status === 409) errorMsg.innerHTML = 'Email уже зарегистрирован';
+            else errorMsg.innerHTML = 'Ошибка регистрации';
+        });
+    }
+</script>
+</body>
+</html>
