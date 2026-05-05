@@ -9,7 +9,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,13 +37,8 @@ public class MainServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // Проверка авторизации через сессию Tomcat
-        HttpSession session = req.getSession(false);
-        UserProfile currentUser = null;
-
-        if (session != null) {
-            currentUser = (UserProfile) session.getAttribute("currentUser");
-        }
+        String sessionId = req.getSession().getId();
+        UserProfile currentUser = accountService.getUserBySessionId(sessionId);
 
         if (currentUser == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -63,6 +57,7 @@ public class MainServlet extends HttpServlet {
     private void downloadFile(String filePath, UserProfile user, HttpServletResponse resp)
             throws IOException {
 
+        // Проверка, что файл внутри папки пользователя
         String userRoot = USERS_ROOT + user.getLogin();
         File requestedFile = new File(filePath);
 
@@ -105,7 +100,6 @@ public class MainServlet extends HttpServlet {
 
         path = normalizePath(path);
 
-        // Защита: проверка, что путь внутри папки пользователя
         File requestedPath = new File(path);
         File userRootFile = new File(userRoot);
 
@@ -162,7 +156,6 @@ public class MainServlet extends HttpServlet {
         File parentDirectory = currentDirectory.getParentFile();
         String parentPath = parentDirectory != null ? normalizePath(parentDirectory.getAbsolutePath()) : null;
 
-        // Проверка, что родительская папка не выходит за пределы userRoot
         if (parentPath != null) {
             File parentFile = new File(parentPath);
             if (!parentFile.getCanonicalPath().startsWith(userRootFile.getCanonicalPath())) {

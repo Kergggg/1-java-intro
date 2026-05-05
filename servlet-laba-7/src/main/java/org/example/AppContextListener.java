@@ -1,7 +1,6 @@
 package org.example;
 
 import org.example.accounts.AccountService;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;

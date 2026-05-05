@@ -8,7 +8,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet("/api/auth")
@@ -28,7 +27,6 @@ public class AuthServlet extends HttpServlet {
         String action = req.getParameter("action");
 
         if ("login".equals(action)) {
-            // ВХОД
             String login = req.getParameter("login");
             String pass = req.getParameter("pass");
 
@@ -44,13 +42,10 @@ public class AuthServlet extends HttpServlet {
                 return;
             }
 
-            // Сохраняем профиль в сессию Tomcat
-            HttpSession session = req.getSession();
-            session.setAttribute("currentUser", profile);
-
+            String sessionId = req.getSession().getId();
+            accountService.addSession(sessionId, profile);
             resp.setStatus(HttpServletResponse.SC_OK);
         } else {
-            // РЕГИСТРАЦИЯ
             String login = req.getParameter("login");
             String email = req.getParameter("email");
             String pass = req.getParameter("pass");
@@ -70,10 +65,8 @@ public class AuthServlet extends HttpServlet {
             UserProfile profile = new UserProfile(login, email, pass);
             accountService.addNewUser(profile);
 
-            // Сохраняем профиль в сессию Tomcat
-            HttpSession session = req.getSession();
-            session.setAttribute("currentUser", profile);
-
+            String sessionId = req.getSession().getId();
+            accountService.addSession(sessionId, profile);
             resp.setStatus(HttpServletResponse.SC_OK);
         }
     }
