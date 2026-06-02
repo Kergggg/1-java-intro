@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Список покупок</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .purchased { text-decoration: line-through; color: gray; }
+        li { margin: 8px 0; }
+        button { margin-left: 10px; }
+    </style>
+</head>
+<body>
+<h1>Список покупок</h1>
+<div>
+    <input type="text" id="itemName" placeholder="Название товара">
+    <button onclick="addItem()">Добавить</button>
+</div>
+<ul id="shoppingList"></ul>
+
+<script>
+    const API_URL = '/api/items';
+
+    function loadItems() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(items => {
+                const listEl = document.getElementById('shoppingList');
+                listEl.innerHTML = '';
+                items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.id = `item-${item.id}`;
+                    li.className = item.purchased ? 'purchased' : '';
+                    li.innerHTML = `
+                        ${item.name}
+                        ${!item.purchased ? `<button onclick="markPurchased(${item.id})">Куплено</button>` : ''}
+                        <button onclick="deleteItem(${item.id})">Удалить</button>
+                    `;
+                    listEl.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Ошибка загрузки:', error));
+    }
+
+    function addItem() {
+        const nameInput = document.getElementById('itemName');
+        const name = nameInput.value.trim();
+        if (!name) {
+            alert('Введите название товара');
+            return;
+        }
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка добавления');
+            return response.json();
+        })
+        .then(() => {
+            nameInput.value = '';
+            loadItems();
+        })
+        .catch(error => console.error('Ошибка:', error));
+    }
+
+    function deleteItem(id) {
+        fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+            .then(() => loadItems())
+            .catch(error => console.error('Ошибка удаления:', error));
+    }
+
+    function markPurchased(id) {
+        fetch(`${API_URL}/${id}/purchased`, { method: 'PUT' })
+            .then(() => loadItems())
+            .catch(error => console.error('Ошибка пометки:', error));
+    }
+
+    // Загружаем список при старте
+    loadItems();
+</script>
+</body>
+</html>
